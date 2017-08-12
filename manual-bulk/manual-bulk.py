@@ -6,10 +6,10 @@ from eventbrite import Eventbrite
 EVENTBRITE_API_SECRET = os.getenv('EVENTBRITE_API_SECRET')
 AIRTABLE_BASE_ID = os.getenv('EVENT_AIRTABLE_BASE_ID')
 AIRTABLE_API_KEY = os.getenv('EVENT_AIRTABLE_API_KEY')
-AIRTABLE_EVENTS_TABLE_ID = 'tblrq7mgDr3bH5P24'
+AIRTABLE_EVENTS_TABLE_ID = '🗓 Events'
 AIRTABLE_EVENTS_VIEW_ID = 'viwnHWHuNNn9PEfrR'
-AIRTABLE_CONTACTS_TABLE_ID = 'tbloEdq8Zw8GQ6l9R'
-AIRTABLE_TICKETS_TABLE_ID = 'tblwjy7s3eeh8DWtT'
+AIRTABLE_CONTACTS_TABLE_ID = '🗃 Community'
+AIRTABLE_TICKETS_TABLE_ID = '🎟 Tickets'
 
 print('Get events from Airtable')
 airtable_client = airtable.Airtable(AIRTABLE_BASE_ID, AIRTABLE_API_KEY)
@@ -20,13 +20,13 @@ def create_or_update_on_airtable(airtable_id, airtable_current_record, new_param
       key: airtable_current_record.get('fields').get(key) for key, value in new_params.items()
     }
     if new_params != airtable_current_params:
-      print('Need to update')
+      print('Need to update {}'.format(airtable_id))
       airtable_record = airtable_client.update(airtable_id, str(airtable_current_record.get('id')), new_params)
     else:
       # print('{} is up to date'.format(airtable_current_record.get('id')))
       airtable_record = airtable_current_record
   else:
-    print('Need to create')
+    print('Need to create {}'.format(airtable_id))
     airtable_record = airtable_client.create(airtable_id, new_params)
   return airtable_record
 
@@ -112,9 +112,8 @@ def get_eventbrite_attendees(eventbrite_id):
       response = eventbrite.get('/events/{}/attendees?continuation={}'.format(eventbrite_id, continuation))
       for record in response.get('attendees'):
           yield record
-      if 'pagination' in response:
-          continuation = response['pagination'].get('continuation', '')
-      else:
+      continuation = response['pagination'].get('continuation')
+      if not continuation:
           break
 
 for airtable_event in airtable_events:
