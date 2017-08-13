@@ -37,7 +37,6 @@ airtable_event_key_by_evenbrite_id = {
     airtable_event.get('fields').get('Eventbrite Id'): str(airtable_event.get('id'))
     for airtable_event in airtable_events
 }
-airtable_event = next(reversed(airtable_events))
 
 print('Get emails from our community contacts in Airtable')
 airtable_contacts = airtable_client.iterate(AIRTABLE_CONTACTS_TABLE_ID)

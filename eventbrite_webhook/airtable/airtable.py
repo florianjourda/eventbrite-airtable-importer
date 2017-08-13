@@ -65,7 +65,7 @@ class Airtable(object):
 
     def get(
             self, table_name, record_id=None, limit=0, offset=None,
-            filter_by_formula=None, view=None):
+            filter_by_formula=None, view=None, fields=None):
         params = {}
         if check_string(record_id):
             url = os.path.join(table_name, record_id)
@@ -79,6 +79,8 @@ class Airtable(object):
                 params.update({'filterByFormula': filter_by_formula})
             if view is not None:
                 params.update({'view': view})
+            if fields is not None:
+                params.update({'fields[]': fields})
         return self.__request('GET', url, params)
 
     def iterate(
