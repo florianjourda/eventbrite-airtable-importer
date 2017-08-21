@@ -36,13 +36,19 @@ def lambda_handler(event, context):
     eventbrite_attendee = None
     if body.get('config', {}).get('action') == 'attendee.updated':
       eventbrite_attendee = get_evenbrite_object(body)
+      airtable_ticket = save_ticket_in_airtable(eventbrite_attendee)
 
-    return {"statusCode": 200, \
-        "headers": {"Content-Type": "application/json"}, \
-        "body": json.dumps({
-            # 'event': event,
-            'eventbrite_attendee': eventbrite_attendee,
-        }, indent=2)}
+      return {"statusCode": 200, \
+          "headers": {"Content-Type": "application/json"}, \
+          "body": json.dumps({
+              'airtable_ticket': airtable_ticket,
+          }, indent=2)}
+
+    return {"statusCode": 404, \
+    "headers": {"Content-Type": "application/json"}, \
+    "body": json.dumps({
+        'action_not_supported': body.get('config', {}).get('action'),
+    }, indent=2)}
 
 def get_evenbrite_object(body):
     api_url = body.get('api_url', '')
@@ -50,10 +56,10 @@ def get_evenbrite_object(body):
     print(response)
     return response
 
-def save_ticket_in_airtable(eventbrite_attendee)
+def save_ticket_in_airtable(eventbrite_attendee):
     ticket_id = eventbrite_attendee['id']
     eventbrite_contact = eventbrite_attendee['profile']
-    email = eventbrite_contact['email']
+    email = eventbrite_contact['email'].lower()
     eventbrite_id = eventbrite_attendee['event_id']
 
     print('Get event from Airtable')
@@ -62,8 +68,9 @@ def save_ticket_in_airtable(eventbrite_attendee)
 
     print('Create or update Airtable contact')
     current_airtable_contact = get_airtable_contact(email)
+    current_airtable_name = current_airtable_contact and current_airtable_contact.get('fields').get('Name')
     eventbrite_contact_params = {
-      'Name': eventbrite_contact.get('name').title(),
+      'Name': current_airtable_name or eventbrite_contact.get('name').title(),
       'Email': email,
       'Age': eventbrite_contact.get('age')
     }
@@ -87,6 +94,7 @@ def save_ticket_in_airtable(eventbrite_attendee)
     }
     airtable_ticket = create_or_update_on_airtable(AIRTABLE_TICKETS_TABLE_ID, current_airtable_ticket, eventbrite_ticket_params)
     print(airtable_ticket)
+    return airtable_ticket
 
 def get_airtable_event(eventbrite_id):
   airtable_events = airtable_client.get(
